@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cuaderno Señalización PRO</title>
+<script src="jspdf.umd.min.js"></script>
+<style>
+body { font-family: Arial; padding: 10px; background: #f0f0f0; }
+h2 { text-align: center; }
+button.tab { margin: 3px; padding: 8px; border-radius:5px; border:none; background:#007BFF; color:white; }
+table { width: 100%; background: white; border-collapse: collapse; margin-bottom: 10px; }
+td, th { border: 1px solid #ccc; padding: 8px; }
+input, textarea { width: 100%; border: none; }
+button.guardar { background: #28a745; color: white; padding:10px; width:100%; margin-top:5px; }
+button.borrar { background: #dc3545; color: white; padding:10px; width:100%; margin-top:5px; }
+button.pdf { background:#007BFF; color:white; padding:5px; margin-top:5px; border:none; border-radius:5px; }
+.pagina { display: none; margin-top:10px; }
+.item { background:white; padding:10px; margin-top:10px; border-left:5px solid #007BFF; }
+</style>
+</head>
+<body>
+
+<h2>📒 Cuaderno Señalización PRO</h2>
+
+<!-- Botones para cambiar de página -->
+<div>
+<button class="tab" onclick="mostrarPagina('señales')">Señales</button>
+<button class="tab" onclick="mostrarPagina('soportes')">Soportes</button>
+<button class="tab" onclick="mostrarPagina('pintura')">Pintura</button>
+</div>
+
+<!-- Página Señales -->
+<div id="señales" class="pagina">
+<h3>📌 Señales</h3>
+<table>
+<tr><th>OTR</th><th>Nombre</th><th>Fecha</th></tr>
+<tr><td><input id="otr"></td><td><input id="nombre"></td><td><input type="date" id="fecha"></td></tr>
+</table>
+
+<table>
+<tr><th colspan="4">Señal 1</th></tr>
+<tr><th>Código</th><th>Ubicación</th><th>Clase</th><th>Fabricante/Fecha</th></tr>
+<tr><td><input id="codigo1"></td><td><input id="ubicacion1"></td><td><input id="clase1"></td><td><input id="fabricante1"></td></tr>
+</table>
+
+<table>
+<tr><th colspan="4">Señal 2</th></tr>
+<tr><th>Código</th><th>Ubicación</th><th>Clase</th><th>Fabricante/Fecha</th></tr>
+<tr><td><input id="codigo2"></td><td><input id="ubicacion2"></td><td><input id="clase2"></td><td><input id="fabricante2"></td></tr>
+</table>
+
+<table>
+<tr><th>Observaciones</th></tr>
+<tr><td><textarea id="obs"></textarea></td></tr>
+</table>
+</div>
+
+<!-- Página Soportes -->
+<div id="soportes" class="pagina">
+<h3>📌 Soportes</h3>
+<table>
+<tr><th>Longitud poste Señal 1</th></tr>
+<tr><td><input id="longitud1"></td></tr>
+</table>
+
+<table>
+<tr><th>Longitud poste Señal 2</th></tr>
+<tr><td><input id="longitud2"></td></tr>
+</table>
+</div>
+
+<!-- Página Pintura -->
+<div id="pintura" class="pagina">
+<h3>🎨 Pintura</h3>
+<table>
+<tr><th>Linea 0,15</th><th>Cebreado Azul</th><th>Cebreado</th><th>Anagrama Minusválido</th></tr>
+<tr>
+<td><input id="linea015"></td>
+<td><input id="cebreadoAzul"></td>
+<td><input id="cebreado"></td>
+<td><input id="anagrama"></td>
+</tr>
+</table>
+</div>
+
+<!-- Botones Guardar, Borrar -->
+<button class="guardar" onclick="guardar()">Guardar trabajo</button>
+<button class="borrar" onclick="borrarTodo()">Borrar todo</button>
+
+<!-- Lista de trabajos -->
+<div id="lista"></div>
+
+<script>
+function mostrarPagina(id){
+  document.querySelectorAll('.pagina').forEach(p => p.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+mostrarPagina('señales'); // página inicial
+
+function guardar(){
+  let trabajo = {
+    otr: document.getElementById('otr').value,
+    nombre: document.getElementById('nombre').value,
+    fecha: document.getElementById('fecha').value,
+    señal1: { codigo: document.getElementById('codigo1').value, ubicacion: document.getElementById('ubicacion1').value, clase: document.getElementById('clase1').value, fabricante_fecha: document.getElementById('fabricante1').value },
+    soporte1: { longitud_poste: document.getElementById('longitud1').value },
+    señal2: { codigo: document.getElementById('codigo2').value, ubicacion: document.getElementById('ubicacion2').value, clase: document.getElementById('clase2').value, fabricante_fecha: document.getElementById('fabricante2').value },
+    soporte2: { longitud_poste: document.getElementById('longitud2').value },
+    pintura: { linea015: document.getElementById('linea015').value, cebreadoAzul: document.getElementById('cebreadoAzul').value, cebreado: document.getElementById('cebreado').value, anagrama: document.getElementById('anagrama').value },
+    obs: document.getElementById('obs').value
+  };
+  let lista = JSON.parse(localStorage.getItem("trabajos")) || [];
+  lista.push(trabajo);
+  localStorage.setItem("trabajos", JSON.stringify(lista));
+  mostrar();
+}
+
+function mostrar(){
+  let lista = JSON.parse(localStorage.getItem("trabajos")) || [];
+  let cont = document.getElementById("lista");
+  cont.innerHTML = "";
+  lista.forEach((t,i)=>{
+    cont.innerHTML += `<div class="item">
+      <b>OTR:</b> ${t.otr} | ${t.fecha}<br>
+      <b>Señal 1:</b> ${t.señal1.codigo} - ${t.señal1.ubicacion}<br>
+      <b>Señal 2:</b> ${t.señal2.codigo} - ${t.señal2.ubicacion}<br>
+      <button class="pdf" onclick="exportarPDF(${i})">📄 Exportar PDF</button>
+    </div>`;
+  });
+}
+
+function exportarPDF(i){
+  let lista = JSON.parse(localStorage.getItem("trabajos"));
+  let t = lista[i];
+  const { jsPDF } = window.jspdf;
+  let doc = new jsPDF();
+  doc.text("CUADERNO DE SEÑALIZACIÓN", 10, 10);
+  doc.text(`OTR: ${t.otr}`, 10, 20);
+  doc.text(`Nombre: ${t.nombre}`, 10, 30);
+  doc.text(`Fecha: ${t.fecha}`, 10, 40);
+
+  doc.text("Señal 1:", 10, 55);
+  doc.text(`Código: ${t.señal1.codigo}`, 10, 65);
+  doc.text(`Ubicación: ${t.señal1.ubicacion}`, 10, 75);
+  doc.text(`Clase: ${t.señal1.clase}`, 10, 85);
+  doc.text(`Fabricante/Fecha: ${t.señal1.fabricante_fecha}`, 10, 95);
+  doc.text(`Longitud poste: ${t.soporte1.longitud_poste}`, 10, 105);
+
+  doc.text("Señal 2:", 10, 120);
+  doc.text(`Código: ${t.señal2.codigo}`, 10, 130);
+  doc.text(`Ubicación: ${t.señal2.ubicacion}`, 10, 140);
+  doc.text(`Clase: ${t.señal2.clase}`, 10, 150);
+  doc.text(`Fabricante/Fecha: ${t.señal2.fabricante_fecha}`, 10, 160);
+  doc.text(`Longitud poste: ${t.soporte2.longitud_poste}`, 10, 170);
+
+  doc.text("Pintura:", 10, 185);
+  doc.text(`Linea 0,15: ${t.pintura.linea015}`, 10, 195);
+  doc.text(`Cebreado Azul: ${t.pintura.cebreadoAzul}`, 10, 205);
+  doc.text(`Cebreado: ${t.pintura.cebreado}`, 10, 215);
+  doc.text(`Anagrama Minusválido: ${t.pintura.anagrama}`, 10, 225);
+
+  doc.text("Observaciones:", 10, 240);
+  doc.text(t.obs || "-", 10, 250);
+
+  doc.save(`Trabajo_${t.otr}.pdf`);
+}
+
+function borrarTodo(){
+  localStorage.removeItem("trabajos");
+  mostrar();
+}
+
+mostrar();
+</script>
+
+</body>
+</html>
