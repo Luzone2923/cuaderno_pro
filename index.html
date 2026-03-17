@@ -129,6 +129,7 @@ function mostrar(){
   });
 }
 
+// --- MODIFICACIÓN PARA ANDROID / APK ---
 function exportarPDF(i){
   let lista = JSON.parse(localStorage.getItem("trabajos"));
   let t = lista[i];
@@ -162,7 +163,7 @@ function exportarPDF(i){
   doc.text("Observaciones:", 10, 240);
   doc.text(t.obs || "-", 10, 250);
 
-// --- CAMBIO: EN VEZ DE DESCARGAR, ABRIMOS EN VENTANA / WEBVIEW ---
+  // --- CAMBIO: EN VEZ DE DESCARGAR, ABRIMOS EN VENTANA / WEBVIEW ---
   const pdfBlob = doc.output('bloburl');
   window.open(pdfBlob);
 }
