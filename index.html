@@ -162,7 +162,9 @@ function exportarPDF(i){
   doc.text("Observaciones:", 10, 240);
   doc.text(t.obs || "-", 10, 250);
 
-  doc.save(`Trabajo_${t.otr}.pdf`);
+// --- CAMBIO: EN VEZ DE DESCARGAR, ABRIMOS EN VENTANA / WEBVIEW ---
+  const pdfBlob = doc.output('bloburl');
+  window.open(pdfBlob);
 }
 
 function borrarTodo(){
